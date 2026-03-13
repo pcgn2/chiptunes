@@ -185,6 +185,12 @@
             box-shadow: var(--glow-cyan);
         }
 
+        .control-btn.active {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+
         .control-btn.play-btn {
             width: 80px;
             height: 80px;
@@ -415,23 +421,6 @@
             letter-spacing: 2px;
         }
 
-        .repeat-btn {
-            background: transparent;
-            border: 1px solid var(--accent-green);
-            color: var(--accent-green);
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .repeat-btn:hover, .repeat-btn.active {
-            background: var(--accent-green);
-            color: var(--bg-primary);
-        }
-
         .format-badge {
             display: inline-block;
             font-size: 0.7rem;
@@ -468,11 +457,20 @@
                 </div>
 
                 <div class="controls">
-                    <button class="control-btn" id="repeatBtn" title="Repeat">🔁</button>
+                    <button class="control-btn" id="shuffleBtn" title="Shuffle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+                        </svg>
+                    </button>
                     <button class="control-btn" id="prevBtn" title="Previous">⏮</button>
                     <button class="control-btn play-btn" id="playBtn" title="Play">▶</button>
                     <button class="control-btn" id="nextBtn" title="Next">⏭</button>
                     <button class="control-btn" id="stopBtn" title="Stop">⏹</button>
+                    <button class="control-btn" id="repeatBtn" title="Repeat">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="progress-container">
@@ -512,14 +510,19 @@
         let currentTrackIndex = -1;
         let isPlaying = false;
         let isRepeating = false;
+        let isShuffled = false;
         let player;
         let isPaused = false;
+        let trackStartTime = 0;
+        let trackDuration = 0;
+        let pausedAt = 0;
 
         const playBtn = document.getElementById('playBtn');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const stopBtn = document.getElementById('stopBtn');
         const repeatBtn = document.getElementById('repeatBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
         const volumeSlider = document.getElementById('volumeSlider');
         const progressBar = document.getElementById('progressBar');
         const playlist = document.getElementById('playlist');
@@ -601,17 +604,21 @@
                 // Stream from keygenmusic.tk with proper URL encoding
                 const encodedPath = track.path.split('/').map(part => encodeURIComponent(part)).join('/');
                 player.load('https://keygenmusic.tk' + encodedPath, function(buffer) {
-                    player.play(buffer);
-                    isPlaying = true;
-                    isPaused = false;
-                    playBtn.textContent = '⏸';
-                    
-                    const meta = player.metadata();
-                    const dur = player.duration();
-                    totalTimeEl.textContent = formatTime(dur);
-                    
-                    updateProgress();
-                    updateVisualizer();
+                    setTimeout(() => {
+                        player.play(buffer);
+                        isPlaying = true;
+                        isPaused = false;
+                        playBtn.textContent = '⏸';
+                        
+                        const meta = player.metadata();
+                        const dur = player.duration();
+                        trackDuration = dur;
+                        trackStartTime = Date.now();
+                        pausedAt = 0;
+                        totalTimeEl.textContent = formatTime(dur);
+                        
+                        updateProgress();
+                        updateVisualizer();
 
                     // MediaSession API for iOS Control Center / Lock Screen
                     if ('mediaSession' in navigator) {
@@ -625,6 +632,7 @@
                         navigator.mediaSession.setActionHandler('previoustrack', () => playPrev());
                         navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
                     }
+                    });
                 });
             } catch (e) {
                 console.error('Failed to play track:', e);
@@ -641,6 +649,12 @@
                 player.togglePause();
                 isPaused = !isPaused;
                 playBtn.textContent = isPaused ? '▶' : '⏸';
+                
+                if (isPaused) {
+                    pausedAt = Date.now() - trackStartTime;
+                } else {
+                    trackStartTime = Date.now() - pausedAt;
+                }
             } else {
                 playTrack(currentTrackIndex);
             }
@@ -664,10 +678,13 @@
         function playNext() {
             let nextIndex;
             if (isRepeating) {
-                playTrack(currentTrackIndex);
+                setTimeout(() => playTrack(currentTrackIndex), 100);
+            } else if (isShuffled) {
+                nextIndex = Math.floor(Math.random() * filteredTracks.length);
+                setTimeout(() => playTrack(nextIndex), 100);
             } else {
                 nextIndex = (currentTrackIndex + 1) % filteredTracks.length;
-                playTrack(nextIndex);
+                setTimeout(() => playTrack(nextIndex), 100);
             }
         }
 
@@ -679,6 +696,11 @@
         function toggleRepeat() {
             isRepeating = !isRepeating;
             repeatBtn.classList.toggle('active', isRepeating);
+        }
+
+        function toggleShuffle() {
+            isShuffled = !isShuffled;
+            shuffleBtn.classList.toggle('active', isShuffled);
         }
 
         function formatTime(seconds) {
@@ -695,16 +717,18 @@
             progressInterval = setInterval(() => {
                 if (!isPlaying || isPaused || !player) return;
                 
-                const meta = player.metadata();
-                const dur = player.duration();
-                const row = player.getCurrentRow();
-                const order = player.getCurrentOrder();
+                const dur = trackDuration;
                 
                 if (dur > 0) {
-                    const current = (order * 10) + (row / 100);
+                    const current = (Date.now() - trackStartTime) / 1000;
                     const percent = Math.min((current / dur) * 100, 100);
                     progressFill.style.width = `${percent}%`;
-                    currentTimeEl.textContent = formatTime(current);
+                    currentTimeEl.textContent = formatTime(Math.min(current, dur));
+                    
+                    // Auto next when track ends
+                    if (current >= dur) {
+                        playNext();
+                    }
                 }
             }, 1000);
         }
@@ -749,6 +773,7 @@
         nextBtn.addEventListener('click', playNext);
         stopBtn.addEventListener('click', stop);
         repeatBtn.addEventListener('click', toggleRepeat);
+        shuffleBtn.addEventListener('click', toggleShuffle);
 
         volumeSlider.addEventListener('input', (e) => {
             if (player && player.gainNode) {
@@ -780,6 +805,9 @@
                     break;
                 case 'KeyR':
                     toggleRepeat();
+                    break;
+                case 'KeyS':
+                    toggleShuffle();
                     break;
             }
         });
