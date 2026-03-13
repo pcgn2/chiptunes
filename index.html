@@ -473,6 +473,11 @@
                     <button class="control-btn play-btn" id="playBtn" title="Play">▶</button>
                     <button class="control-btn" id="nextBtn" title="Next">⏭</button>
                     <button class="control-btn" id="stopBtn" title="Stop">⏹</button>
+                    <button class="control-btn airplay-btn" id="airplayBtn" title="AirPlay">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="progress-container">
@@ -500,14 +505,15 @@
         </div>
     </div>
 
-    <script src="https://keygenmusic.tk/js/libs/libopenmpt.js"></script>
-    <script src="https://keygenmusic.tk/js/libs/chiptune2-08.12.2020-fix.js"></script>
+    <script src="js/libopenmpt.js"></script>
+    <script src="js/chiptune2.js"></script>
+    <script src="js/tracks.js"></script>
     <script>
-        // Use keygenmusic.tk for streaming - works on GitHub Pages
-        const BASE_URL = 'https://keygenmusic.tk';
+        // Use local files
+        const BASE_URL = '';
         
-        let tracks = [];
-        let filteredTracks = [];
+        let tracks = TRACKS;
+        let filteredTracks = [...tracks];
         let currentTrackIndex = -1;
         let isPlaying = false;
         let isShuffled = false;
@@ -546,21 +552,14 @@
             });
         }
 
-        async function loadTracks() {
-            try {
-                // Load track list locally (for GitHub Pages)
-                const response = await fetch('lib.txt');
-                const data = await response.text();
-                tracks = JSON.parse(data);
-                filteredTracks = [...tracks];
-                trackCount.textContent = `${tracks.length} tracks`;
-                renderPlaylist();
-                initVisualizer();
-                loading.classList.add('hidden');
-            } catch (e) {
-                console.error('Failed to load tracks:', e);
-                loading.textContent = 'Failed to load tracks: ' + e.message;
-            }
+        function init() {
+            initPlayer();
+            tracks = TRACKS;
+            filteredTracks = [...tracks];
+            trackCount.textContent = `${tracks.length} tracks`;
+            renderPlaylist();
+            initVisualizer();
+            loading.classList.add('hidden');
         }
 
         function getFileExtension(path) {
@@ -604,8 +603,9 @@
             renderPlaylist();
             
             try {
-                // Use remote URL from keygenmusic.tk
-                player.load(BASE_URL + track.path, function(buffer) {
+                // Stream from keygenmusic.tk with proper URL encoding
+                const encodedPath = track.path.split('/').map(part => encodeURIComponent(part)).join('/');
+                player.load('https://keygenmusic.tk' + encodedPath, function(buffer) {
                     player.play(buffer);
                     isPlaying = true;
                     isPaused = false;
@@ -617,6 +617,19 @@
                     
                     updateProgress();
                     updateVisualizer();
+
+                    // MediaSession API for iOS Control Center / Lock Screen
+                    if ('mediaSession' in navigator) {
+                        navigator.mediaSession.metadata = new MediaMetadata({
+                            title: track.sn || 'Unknown',
+                            artist: track.rg || 'Unknown',
+                            album: track.mdt || 'Keygen Music'
+                        });
+                        navigator.mediaSession.setActionHandler('play', () => togglePlay());
+                        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
+                        navigator.mediaSession.setActionHandler('previoustrack', () => playPrev());
+                        navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+                    }
                 });
             } catch (e) {
                 console.error('Failed to play track:', e);
@@ -738,6 +751,42 @@
         stopBtn.addEventListener('click', stop);
         shuffleBtn.addEventListener('click', toggleShuffle);
 
+        // AirPlay button handler
+        const airplayBtn = document.getElementById('airplayBtn');
+        airplayBtn.addEventListener('click', async () => {
+            if (!player || !player.context) return;
+
+            // Method 1: Safari - use webkitShowPlaybackTargetPicker
+            if (player.context.destination.webkitShowPlaybackTargetPicker) {
+                player.context.destination.webkitShowPlaybackTargetPicker();
+                return;
+            }
+
+            // Method 2: Chrome/Edge - use setSinkId for Cast/AirPlay
+            try {
+                const devices = await navigator.mediaDevices.selectAudioOutput();
+                if (devices.deviceId && devices.deviceId !== 'default') {
+                    // Try to redirect audio using an audio element
+                    if (currentTrackIndex >= 0) {
+                        const path = filteredTracks[currentTrackIndex].path.split('/').map(p => encodeURIComponent(p)).join('/');
+                        const audioEl = new Audio('https://keygenmusic.tk' + path);
+                        await audioEl.setSinkId(devices.deviceId);
+                        audioEl.play();
+                        // Stop WebAudio player
+                        if (player.currentPlayingNode) {
+                            player.stop();
+                        }
+                        isPlaying = true;
+                        playBtn.textContent = '⏸';
+                        airplayBtn.style.color = 'var(--accent-green)';
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('Audio output selection cancelled or failed');
+            }
+        });
+
         volumeSlider.addEventListener('input', (e) => {
             if (player && player.gainNode) {
                 player.gainNode.gain.value = e.target.value / 100;
@@ -776,7 +825,7 @@
         var checkModule = setInterval(function() {
             if (typeof Module !== 'undefined' && typeof ChiptuneJsPlayer !== 'undefined') {
                 clearInterval(checkModule);
-                loadTracks();
+                init();
             }
         }, 100);
     </script>
