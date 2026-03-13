@@ -415,7 +415,7 @@
             letter-spacing: 2px;
         }
 
-        .shuffle-btn {
+        .repeat-btn {
             background: transparent;
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
@@ -427,7 +427,7 @@
             transition: all 0.3s ease;
         }
 
-        .shuffle-btn:hover, .shuffle-btn.active {
+        .repeat-btn:hover, .repeat-btn.active {
             background: var(--accent-green);
             color: var(--bg-primary);
         }
@@ -468,16 +468,11 @@
                 </div>
 
                 <div class="controls">
-                    <button class="control-btn" id="shuffleBtn" title="Shuffle">⟳</button>
+                    <button class="control-btn" id="repeatBtn" title="Repeat">🔁</button>
                     <button class="control-btn" id="prevBtn" title="Previous">⏮</button>
                     <button class="control-btn play-btn" id="playBtn" title="Play">▶</button>
                     <button class="control-btn" id="nextBtn" title="Next">⏭</button>
                     <button class="control-btn" id="stopBtn" title="Stop">⏹</button>
-                    <button class="control-btn airplay-btn" id="airplayBtn" title="AirPlay">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
-                        </svg>
-                    </button>
                 </div>
 
                 <div class="progress-container">
@@ -516,7 +511,7 @@
         let filteredTracks = [...tracks];
         let currentTrackIndex = -1;
         let isPlaying = false;
-        let isShuffled = false;
+        let isRepeating = false;
         let player;
         let isPaused = false;
 
@@ -524,7 +519,7 @@
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const stopBtn = document.getElementById('stopBtn');
-        const shuffleBtn = document.getElementById('shuffleBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
         const volumeSlider = document.getElementById('volumeSlider');
         const progressBar = document.getElementById('progressBar');
         const playlist = document.getElementById('playlist');
@@ -548,7 +543,7 @@
 
             player.onError(function(e) {
                 console.error('Player error:', e);
-                playNext();
+                // Don't auto-play next on error to avoid loops
             });
         }
 
@@ -652,24 +647,28 @@
         }
 
         function stop() {
-            if (player && player.currentPlayingNode) {
-                player.stop();
-                isPlaying = false;
-                isPaused = false;
-                playBtn.textContent = '▶';
-                progressFill.style.width = '0%';
-                currentTimeEl.textContent = '0:00';
+            try {
+                if (player && player.currentPlayingNode) {
+                    player.stop();
+                }
+            } catch (e) {
+                // Ignore cleanup errors
             }
+            isPlaying = false;
+            isPaused = false;
+            playBtn.textContent = '▶';
+            progressFill.style.width = '0%';
+            currentTimeEl.textContent = '0:00';
         }
 
         function playNext() {
             let nextIndex;
-            if (isShuffled) {
-                nextIndex = Math.floor(Math.random() * filteredTracks.length);
+            if (isRepeating) {
+                playTrack(currentTrackIndex);
             } else {
                 nextIndex = (currentTrackIndex + 1) % filteredTracks.length;
+                playTrack(nextIndex);
             }
-            playTrack(nextIndex);
         }
 
         function playPrev() {
@@ -677,9 +676,9 @@
             playTrack(prevIndex);
         }
 
-        function toggleShuffle() {
-            isShuffled = !isShuffled;
-            shuffleBtn.classList.toggle('active', isShuffled);
+        function toggleRepeat() {
+            isRepeating = !isRepeating;
+            repeatBtn.classList.toggle('active', isRepeating);
         }
 
         function formatTime(seconds) {
@@ -707,7 +706,7 @@
                     progressFill.style.width = `${percent}%`;
                     currentTimeEl.textContent = formatTime(current);
                 }
-            }, 100);
+            }, 1000);
         }
 
         function initVisualizer() {
@@ -749,43 +748,7 @@
         prevBtn.addEventListener('click', playPrev);
         nextBtn.addEventListener('click', playNext);
         stopBtn.addEventListener('click', stop);
-        shuffleBtn.addEventListener('click', toggleShuffle);
-
-        // AirPlay button handler
-        const airplayBtn = document.getElementById('airplayBtn');
-        airplayBtn.addEventListener('click', async () => {
-            if (!player || !player.context) return;
-
-            // Method 1: Safari - use webkitShowPlaybackTargetPicker
-            if (player.context.destination.webkitShowPlaybackTargetPicker) {
-                player.context.destination.webkitShowPlaybackTargetPicker();
-                return;
-            }
-
-            // Method 2: Chrome/Edge - use setSinkId for Cast/AirPlay
-            try {
-                const devices = await navigator.mediaDevices.selectAudioOutput();
-                if (devices.deviceId && devices.deviceId !== 'default') {
-                    // Try to redirect audio using an audio element
-                    if (currentTrackIndex >= 0) {
-                        const path = filteredTracks[currentTrackIndex].path.split('/').map(p => encodeURIComponent(p)).join('/');
-                        const audioEl = new Audio('https://keygenmusic.tk' + path);
-                        await audioEl.setSinkId(devices.deviceId);
-                        audioEl.play();
-                        // Stop WebAudio player
-                        if (player.currentPlayingNode) {
-                            player.stop();
-                        }
-                        isPlaying = true;
-                        playBtn.textContent = '⏸';
-                        airplayBtn.style.color = 'var(--accent-green)';
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.log('Audio output selection cancelled or failed');
-            }
-        });
+        repeatBtn.addEventListener('click', toggleRepeat);
 
         volumeSlider.addEventListener('input', (e) => {
             if (player && player.gainNode) {
@@ -815,8 +778,8 @@
                 case 'ArrowLeft':
                     playPrev();
                     break;
-                case 'KeyS':
-                    toggleShuffle();
+                case 'KeyR':
+                    toggleRepeat();
                     break;
             }
         });
