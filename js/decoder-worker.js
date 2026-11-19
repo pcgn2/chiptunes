@@ -143,7 +143,12 @@ async function load(message) {
 
   try {
     if (!ready()) throw new Error(bootError || 'Audio decoder failed to start');
-    const response = await fetch(message.url, { signal: controller.signal });
+    const response = await fetch(message.url, {
+      signal: controller.signal,
+      mode: 'cors',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status} while fetching module`);
     const bytes = await response.arrayBuffer();
     if (token !== loadToken) return;

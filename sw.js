@@ -1,5 +1,5 @@
 /* Offline shell cache — audio streams are never cached. Static assets are network-first. */
-const VERSION = 'kgm-v16';
+const VERSION = 'kgm-v17';
 const SHELL = [
   './',
   './index.html',
