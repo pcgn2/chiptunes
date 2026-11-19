@@ -1,990 +1,187 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chiptune Player - Keygen Music</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-tertiary: #1a1a25;
-            --accent-cyan: #00f0ff;
-            --accent-magenta: #ff00aa;
-            --accent-green: #00ff88;
-            --accent-orange: #ff8800;
-            --text-primary: #e0e0e0;
-            --text-secondary: #888899;
-            --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.5);
-            --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.5);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(255, 0, 170, 0.08) 0%, transparent 50%),
-                linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        @media (max-width: 600px) {
-            * {
-                max-width: 100%;
-            }
-            body {
-                overflow-x: hidden;
-            }
-            .container {
-                padding: 10px;
-                max-width: 100vw;
-            }
-            .player-container {
-                gap: 10px;
-                max-width: 100%;
-            }
-            .now-playing, .playlist-panel {
-                width: 100%;
-                max-width: 100vw;
-                padding: 10px;
-                border-radius: 10px;
-                box-sizing: border-box;
-            }
-            .now-playing {
-                margin: 0;
-            }
-            .playlist-panel {
-                margin: 0;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-            .subtitle {
-                font-size: 0.9rem;
-            }
-            .controls {
-                gap: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .control-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-            .control-btn.play-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            .visualizer {
-                height: 80px;
-            }
-            .track-title {
-                font-size: 1.1rem;
-            }
-            .track-artist {
-                font-size: 1rem;
-            }
-            .progress-container {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .volume-container {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .playlist-panel {
-                max-height: 300px;
-            }
-        }
-            .player-container {
-                gap: 15px;
-            }
-        }
-
-        header {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 3.5rem;
-            font-weight: 900;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: var(--glow-cyan);
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            letter-spacing: 2px;
-        }
-
-        .player-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        @media (max-width: 900px) {
-            .player-container {
-                grid-template-columns: 1fr;
-            }
-            h1 {
-                font-size: 2rem;
-            }
-            .now-playing {
-                padding: 20px;
-            }
-            .track-title {
-                font-size: 1.3rem;
-            }
-            .control-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
-            .control-btn.play-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-            }
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-            .subtitle {
-                font-size: 0.9rem;
-            }
-            .controls {
-                gap: 10px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .control-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 1rem;
-            }
-            .control-btn.play-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 1.2rem;
-            }
-            .visualizer {
-                height: 80px;
-            }
-            .track-title {
-                font-size: 1.1rem;
-            }
-            .track-artist {
-                font-size: 1rem;
-            }
-            .progress-container {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .volume-container {
-                flex-direction: column;
-                gap: 5px;
-            }
-            .playlist-panel {
-                max-height: 300px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            h1 {
-                font-size: 1.2rem;
-            }
-            .control-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 0.9rem;
-            }
-            .control-btn.play-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1rem;
-            }
-            .playlist-item {
-                padding: 8px 10px;
-            }
-            .playlist-item-title {
-                font-size: 0.9rem;
-            }
-            .playlist-item-artist {
-                font-size: 0.75rem;
-            }
-            .playlist-item-game {
-                font-size: 0.7rem;
-            }
-        }
-
-        .now-playing {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .now-playing::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta), var(--accent-green));
-        }
-
-        .visualizer {
-            height: 150px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-            gap: 3px;
-            padding: 10px;
-            overflow: hidden;
-        }
-
-        .visualizer-bar {
-            width: 4px;
-            background: linear-gradient(to top, var(--accent-cyan), var(--accent-magenta));
-            border-radius: 2px;
-            transition: height 0.05s ease;
-        }
-
-        .track-info {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .track-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            color: var(--accent-cyan);
-            margin-bottom: 5px;
-            text-shadow: var(--glow-cyan);
-        }
-
-        .track-artist {
-            font-size: 1.3rem;
-            color: var(--accent-magenta);
-            margin-bottom: 5px;
-        }
-
-        .track-game {
-            font-size: 1rem;
-            color: var(--text-secondary);
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 2px solid var(--accent-cyan);
-            background: transparent;
-            color: var(--accent-cyan);
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .control-btn:hover {
-            background: var(--accent-cyan);
-            color: var(--bg-primary);
-            box-shadow: var(--glow-cyan);
-        }
-
-        .control-btn.active {
-            background: var(--accent-green);
-            color: var(--bg-primary);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-        }
-
-        .control-btn.play-btn {
-            width: 80px;
-            height: 80px;
-            font-size: 2rem;
-            border-color: var(--accent-magenta);
-            color: var(--accent-magenta);
-        }
-
-        .control-btn.play-btn:hover {
-            background: var(--accent-magenta);
-            color: var(--bg-primary);
-            box-shadow: var(--glow-magenta);
-        }
-
-        .progress-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .progress-bar {
-            flex: 1;
-            height: 6px;
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
-            border-radius: 3px;
-            width: 0%;
-            transition: width 0.1s linear;
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .volume-slider {
-            width: 120px;
-            -webkit-appearance: none;
-            height: 6px;
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-
-        .playlist-panel {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            max-height: 600px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .playlist-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--bg-tertiary);
-        }
-
-        .playlist-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            color: var(--accent-cyan);
-        }
-
-        .track-count {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .search-box {
-            width: 100%;
-            padding: 12px 20px;
-            background: var(--bg-tertiary);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1rem;
-            margin-bottom: 15px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        .search-box:focus {
-            border-color: var(--accent-cyan);
-        }
-
-        .search-box::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .playlist {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--accent-cyan) var(--bg-tertiary);
-        }
-
-        .playlist::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .playlist::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-        }
-
-        .playlist::-webkit-scrollbar-thumb {
-            background: var(--accent-cyan);
-            border-radius: 3px;
-        }
-
-        .playlist-item {
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 5px;
-            border-left: 3px solid transparent;
-        }
-
-        .playlist-item:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .playlist-item.active {
-            background: var(--bg-tertiary);
-            border-left-color: var(--accent-magenta);
-        }
-
-        .playlist-item.playing {
-            border-left-color: var(--accent-cyan);
-            background: rgba(0, 240, 255, 0.1);
-        }
-
-        .playlist-item-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .playlist-item.active .playlist-item-title {
-            color: var(--accent-cyan);
-        }
-
-        .playlist-item-artist {
-            font-size: 0.85rem;
-            color: var(--accent-magenta);
-        }
-
-        .playlist-item-game {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loader {
-            width: 80px;
-            height: 80px;
-            border: 4px solid var(--bg-tertiary);
-            border-top-color: var(--accent-cyan);
-            border-right-color: var(--accent-magenta);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            margin-top: 20px;
-            font-family: 'Orbitron', sans-serif;
-            color: var(--accent-cyan);
-            letter-spacing: 2px;
-        }
-
-        .format-badge {
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: var(--bg-primary);
-            color: var(--text-secondary);
-            margin-left: 8px;
-            text-transform: uppercase;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A modern chiptune and keygen music player. Stream thousands of MOD, XM, IT and S3M modules with a real-time spectrum visualizer.">
+  <meta name="theme-color" content="#050410">
+  <title>KEYGEN MUSIC · Chiptune Player</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
-    <div class="loading-overlay" id="loading">
-        <div class="loader"></div>
-        <div class="loading-text">Loading tracks...</div>
+<body class="minimal">
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <div class="boot" id="boot" role="status" aria-live="polite">
+    <div class="boot-logo" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none"><path d="M6 38h7l5-16 7 30 7-38 7 28 5-12 5 8h8" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
+    <div class="boot-title">KEYGEN MUSIC</div>
+    <div class="boot-status" id="bootStatus">Booting audio engine…</div>
+    <div class="boot-bar"><i id="bootBar"></i></div>
+  </div>
 
-    <div class="container">
-        <header>
-            <h1>KEYGEN MUSIC</h1>
-            <div class="subtitle">CHIPTUNE PLAYER • .MOD • .XM • .IT • .S3M</div>
-        </header>
+  <div class="toast-region" id="toasts" role="status" aria-live="polite"></div>
 
-        <div class="player-container">
-            <div class="now-playing">
-                <div class="visualizer" id="visualizer">
-                </div>
-
-                <div class="track-info">
-                    <div class="track-title" id="trackTitle">Select a track</div>
-                    <div class="track-artist" id="trackArtist">-</div>
-                    <div class="track-game" id="trackGame">-</div>
-                </div>
-
-                <div class="controls">
-                    <button class="control-btn" id="shuffleBtn" title="Shuffle">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
-                        </svg>
-                    </button>
-                    <button class="control-btn" id="prevBtn" title="Previous">⏮</button>
-                    <button class="control-btn play-btn" id="playBtn" title="Play">▶</button>
-                    <button class="control-btn" id="nextBtn" title="Next">⏭</button>
-                    <button class="control-btn" id="stopBtn" title="Stop">⏹</button>
-                    <button class="control-btn" id="repeatBtn" title="Repeat">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <div class="progress-container">
-                    <span id="currentTime">0:00</span>
-                    <div class="progress-bar" id="progressBar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <span id="totalTime">0:00</span>
-                </div>
-
-                <div class="volume-container">
-                    <span>🔊</span>
-                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
-                </div>
-            </div>
-
-            <div class="playlist-panel">
-                <div class="playlist-header">
-                    <span class="playlist-title">Library</span>
-                    <span class="track-count" id="trackCount">0 tracks</span>
-                </div>
-                <input type="text" class="search-box" id="searchBox" placeholder="Search tracks...">
-                <div class="playlist" id="playlist"></div>
-            </div>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="header-glow" aria-hidden="true"></div>
+      <div class="brand">
+        <div class="brand-emblem" aria-hidden="true">
+          <span class="emblem-orbit"></span>
+          <span class="emblem-orbit emblem-orbit-inner"></span>
+          <div class="brand-mark">
+            <svg viewBox="0 0 64 64" fill="none"><path d="M6 38h7l5-16 7 30 7-38 7 28 5-12 5 8h8" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
         </div>
-    </div>
+        <div class="brand-copy">
+          <div class="brand-kicker"><span></span>Retro module streaming<span></span></div>
+          <h1>KEYGEN <span>MUSIC</span></h1>
+          <p>MOD · XM · IT · S3M — streamed in your browser</p>
+        </div>
+      </div>
+      <span class="pill" hidden><span class="pill-dot"></span><span id="libraryStat">—</span> modules</span>
+    </header>
 
-    <script src="js/libopenmpt.js"></script>
-    <script src="js/chiptune2.js"></script>
-    <script src="js/tracks.js"></script>
-    <script>
-        // Use local files
-        const BASE_URL = '';
-        
-        let tracks = TRACKS;
-        let filteredTracks = [...tracks];
-        let currentTrackIndex = -1;
-        let isPlaying = false;
-        let isRepeating = false;
-        let isShuffled = false;
-        let player;
-        let isPaused = false;
-        let trackStartTime = 0;
-        let trackDuration = 0;
-        let pausedAt = 0;
+    <main class="layout">
+      <section class="card player-card" aria-label="Player">
+        <div class="card-head" hidden>
+          <span class="eyebrow"><span class="eyebrow-line"></span>Now playing</span>
+          <span class="status-pill" id="statusPill" data-state="ready">Ready</span>
+        </div>
 
-        const playBtn = document.getElementById('playBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const repeatBtn = document.getElementById('repeatBtn');
-        const shuffleBtn = document.getElementById('shuffleBtn');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const progressBar = document.getElementById('progressBar');
-        const playlist = document.getElementById('playlist');
-        const searchBox = document.getElementById('searchBox');
-        const trackTitle = document.getElementById('trackTitle');
-        const trackArtist = document.getElementById('trackArtist');
-        const trackGame = document.getElementById('trackGame');
-        const currentTimeEl = document.getElementById('currentTime');
-        const totalTimeEl = document.getElementById('totalTime');
-        const progressFill = document.getElementById('progressFill');
-        const trackCount = document.getElementById('trackCount');
-        const visualizer = document.getElementById('visualizer');
-        const loading = document.getElementById('loading');
+        <div class="visualizer-frame">
+          <canvas id="visualizer" aria-label="Audio spectrum visualizer" role="img"></canvas>
+          <div class="viz-grid" aria-hidden="true" hidden></div>
+          <div class="viz-corner viz-corner-tl" aria-hidden="true" hidden></div>
+          <div class="viz-corner viz-corner-br" aria-hidden="true" hidden></div>
+          <span class="viz-label" aria-hidden="true" hidden>SPECTRUM / 60 FPS</span>
+        </div>
 
-        function initPlayer() {
-            player = new ChiptuneJsPlayer(new ChiptuneJsConfig(0));
-            
-            player.onEnded(function() {
-                playNext();
-            });
+        <div class="track-block">
+          <div class="track-number" id="trackNumber" hidden>—</div>
+          <div class="track-copy">
+            <h2 id="trackTitle" aria-live="polite">Nothing selected</h2>
+            <p class="artist" id="trackArtist">Pick a module from the library</p>
+            <p class="game" id="trackGame" hidden>The chiptunes that shipped with the crack intros</p>
+          </div>
+          <span class="format-chip" id="formatChip" hidden>—</span>
+        </div>
 
-            player.onError(function(e) {
-                console.error('Player error:', e);
-                // Don't auto-play next on error to avoid loops
-            });
-        }
+        <div class="seek-block">
+          <div class="seek" id="seek" role="slider" tabindex="0" aria-label="Seek position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0:00 of 0:00">
+            <div class="seek-rail"><div class="seek-fill" id="seekFill"></div><div class="seek-thumb" id="seekThumb"></div></div>
+          </div>
+          <div class="time-row"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
+        </div>
 
-        function init() {
-            initPlayer();
-            tracks = TRACKS;
-            filteredTracks = [...tracks];
-            trackCount.textContent = `${tracks.length} tracks`;
-            renderPlaylist();
-            initVisualizer();
-            loading.classList.add('hidden');
-        }
+        <div class="controls">
+          <button class="icon-btn" id="shuffleBtn" type="button" aria-label="Shuffle" aria-pressed="false" title="Shuffle (S)">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+          </button>
+          <button class="icon-btn" id="prevBtn" type="button" aria-label="Previous track" title="Previous (P)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6V5zm3.5 7L19 5v14l-9.5-7z"/></svg>
+          </button>
+          <button class="play-btn" id="playBtn" type="button" aria-label="Play" title="Play / pause (Space)">
+            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M7 5h4v14H7V5zm6 0h4v14h-4V5z"/></svg>
+          </button>
+          <button class="icon-btn" id="nextBtn" type="button" aria-label="Next track" title="Next (N)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2V5zM5 5l9.5 7L5 19V5z"/></svg>
+          </button>
+          <button class="icon-btn" id="stopBtn" type="button" aria-label="Stop" title="Stop" hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          </button>
+          <button class="icon-btn" id="repeatBtn" type="button" aria-label="Repeat: off" aria-pressed="false" title="Repeat (R)" hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+            <span class="mode-dot" id="repeatDot" hidden></span>
+          </button>
+          <button class="icon-btn" id="favoriteBtn" type="button" aria-label="Add to favorites" aria-pressed="false" title="Favorite (F)" hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-4.9-8-10.4C4 7.4 6 5.5 8.6 5.5c1.5 0 2.7.7 3.4 1.8.7-1.1 1.9-1.8 3.4-1.8C18 5.5 20 7.4 20 10.6 20 16.1 12 21 12 21z"/></svg>
+          </button>
+        </div>
 
-        function getFileExtension(path) {
-            const match = path.match(/\.([^.]+)$/);
-            return match ? match[1].toUpperCase() : '';
-        }
+        <div class="player-foot">
+          <div class="volume">
+            <button class="icon-btn tiny" id="muteBtn" type="button" aria-label="Mute" title="Mute (M)">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 9h4l5-4v14l-5-4H4V9zm12.5-.5a5 5 0 0 1 0 7l-1.3-1.3a3.2 3.2 0 0 0 0-4.4l1.3-1.3zm2.3-2.3a8 8 0 0 1 0 11.6l-1.4-1.4a6 6 0 0 0 0-8.8l1.4-1.4z"/></svg>
+            </button>
+            <input type="range" id="volume" min="0" max="100" value="80" aria-label="Volume">
+            <span class="mono" id="volumeValue" hidden>80%</span>
+          </div>
+          <div class="tracker mono" aria-label="Tracker position" hidden>
+            <span>PAT <b id="statPattern">--</b></span>
+            <span>ROW <b id="statRow">--</b></span>
+            <span>ORD <b id="statOrder">--</b></span>
+          </div>
+        </div>
+      </section>
 
-        function renderPlaylist() {
-            playlist.innerHTML = '';
-            filteredTracks.forEach((track, index) => {
-                const item = document.createElement('div');
-                item.className = 'playlist-item';
-                if (index === currentTrackIndex) {
-                    item.classList.add('active');
-                    if (isPlaying) item.classList.add('playing');
-                }
-                
-                const ext = getFileExtension(track.path);
-                
-                item.innerHTML = `
-                    <div class="playlist-item-title">${track.sn}${track.sn ? ' ' : ''}<span class="format-badge">${ext}</span></div>
-                    <div class="playlist-item-artist">${track.rg || 'Unknown'}</div>
-                    <div class="playlist-item-game">${track.mdt || ''}</div>
-                `;
-                
-                item.addEventListener('click', () => playTrack(index));
-                playlist.appendChild(item);
-            });
-        }
+      <section class="card library-card" aria-label="Track library">
+        <div class="card-head" hidden>
+          <span class="eyebrow"><span class="eyebrow-line"></span>Library</span>
+          <span class="count-pill" id="libraryCount">0</span>
+        </div>
 
-        async function playTrack(index) {
-            if (index < 0 || index >= filteredTracks.length) return;
-            
-            currentTrackIndex = index;
-            const track = filteredTracks[index];
-            
-            trackTitle.textContent = track.sn || 'Unknown';
-            trackArtist.textContent = track.rg || 'Unknown';
-            trackGame.textContent = track.mdt || '';
-            
-            renderPlaylist();
-            
-            try {
-                // Stream from keygenmusic.tk with proper URL encoding
-                const encodedPath = track.path.split('/').map(part => encodeURIComponent(part)).join('/');
-                player.load('https://keygenmusic.tk' + encodedPath, function(buffer) {
-                    setTimeout(() => {
-                        player.play(buffer);
-                        isPlaying = true;
-                        isPaused = false;
-                        playBtn.textContent = '⏸';
-                        
-                        const meta = player.metadata();
-                        const dur = player.duration();
-                        trackDuration = dur;
-                        trackStartTime = Date.now();
-                        pausedAt = 0;
-                        totalTimeEl.textContent = formatTime(dur);
-                        
-                        updateProgress();
-                        updateVisualizer();
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input type="search" id="search" placeholder="Search tracks…" autocomplete="off" spellcheck="false" aria-label="Search library">
+          <button class="icon-btn subtle" id="favoritesOnlyBtn" type="button" aria-label="Favorites only" aria-pressed="false" title="Favorites only">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-8-4.9-8-10.4C4 7.4 6 5.5 8.6 5.5c1.5 0 2.7.7 3.4 1.8.7-1.1 1.9-1.8 3.4-1.8C18 5.5 20 7.4 20 10.6 20 16.1 12 21 12 21z"/></svg>
+          </button>
+          <kbd hidden>/</kbd>
+        </div>
 
-                    // MediaSession API for iOS Control Center / Lock Screen
-                    if ('mediaSession' in navigator) {
-                        navigator.mediaSession.metadata = new MediaMetadata({
-                            title: track.sn || 'Unknown',
-                            artist: track.rg || 'Unknown',
-                            album: track.mdt || 'Keygen Music'
-                        });
-                        navigator.mediaSession.setActionHandler('play', () => togglePlay());
-                        navigator.mediaSession.setActionHandler('pause', () => togglePlay());
-                        navigator.mediaSession.setActionHandler('previoustrack', () => playPrev());
-                        navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
-                    }
-                    });
-                });
-            } catch (e) {
-                console.error('Failed to play track:', e);
-            }
-        }
+        <div class="chip-row" role="group" aria-label="Library filters" hidden>
+          <button class="chip active" type="button" data-filter="all" aria-pressed="true">All</button>
+          <button class="chip" type="button" data-filter="favorites" aria-pressed="false">Favorites</button>
+          <button class="chip" type="button" data-filter="recent" aria-pressed="false">Recent</button>
+          <select id="formatFilter" aria-label="Filter by format">
+            <option value="all">All formats</option>
+            <option value="XM">XM</option>
+            <option value="IT">IT</option>
+            <option value="MOD">MOD</option>
+            <option value="S3M">S3M</option>
+          </select>
+        </div>
 
-        function togglePlay() {
-            if (currentTrackIndex === -1 && filteredTracks.length > 0) {
-                playTrack(0);
-                return;
-            }
-            
-            if (isPlaying) {
-                player.togglePause();
-                isPaused = !isPaused;
-                playBtn.textContent = isPaused ? '▶' : '⏸';
-                
-                if (isPaused) {
-                    pausedAt = Date.now() - trackStartTime;
-                } else {
-                    trackStartTime = Date.now() - pausedAt;
-                }
-            } else {
-                playTrack(currentTrackIndex);
-            }
-        }
+        <div class="sort-row" hidden>
+          <span>Sort</span>
+          <select id="sortBy" aria-label="Sort library">
+            <option value="default">Catalog order</option>
+            <option value="title">Title A–Z</option>
+            <option value="artist">Artist A–Z</option>
+            <option value="game">Game A–Z</option>
+            <option value="number">Number</option>
+          </select>
+          <span class="result-info" id="resultInfo"></span>
+        </div>
 
-        function stop() {
-            try {
-                if (player && player.currentPlayingNode) {
-                    player.stop();
-                }
-            } catch (e) {
-                // Ignore cleanup errors
-            }
-            isPlaying = false;
-            isPaused = false;
-            playBtn.textContent = '▶';
-            progressFill.style.width = '0%';
-            currentTimeEl.textContent = '0:00';
-        }
+        <div class="list-head" aria-hidden="true" hidden><span>#</span><span>Track / artist / game</span><span>Fmt</span></div>
+        <div class="track-list" id="trackList" role="listbox" tabindex="0" aria-label="Tracks">
+          <div class="list-spacer" id="listSpacer"></div>
+          <div class="list-window" id="listWindow"></div>
+        </div>
 
-        function playNext() {
-            let nextIndex;
-            if (isRepeating) {
-                setTimeout(() => playTrack(currentTrackIndex), 100);
-            } else if (isShuffled) {
-                nextIndex = Math.floor(Math.random() * filteredTracks.length);
-                setTimeout(() => playTrack(nextIndex), 100);
-            } else {
-                nextIndex = (currentTrackIndex + 1) % filteredTracks.length;
-                setTimeout(() => playTrack(nextIndex), 100);
-            }
-        }
+        <div class="library-foot" hidden>
+          <span id="selectionInfo" class="mono">Select a track to play</span>
+          <button type="button" class="ghost-btn" id="shuffleAllBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+            Shuffle all
+          </button>
+        </div>
+      </section>
+    </main>
 
-        function playPrev() {
-            const prevIndex = currentTrackIndex <= 0 ? filteredTracks.length - 1 : currentTrackIndex - 1;
-            playTrack(prevIndex);
-        }
+    <footer class="site-foot credits">
+      <span>Music files from <a href="https://keygenmusic.tk/" target="_blank" rel="noopener noreferrer">keygenmusic.tk</a> · Decoded with <a href="https://lib.openmpt.org/libopenmpt/" target="_blank" rel="noopener noreferrer">libopenmpt</a> · Tracks remain the property of their original authors.</span>
+    </footer>
+  </div>
 
-        function toggleRepeat() {
-            isRepeating = !isRepeating;
-            repeatBtn.classList.toggle('active', isRepeating);
-        }
-
-        function toggleShuffle() {
-            isShuffled = !isShuffled;
-            shuffleBtn.classList.toggle('active', isShuffled);
-        }
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        let progressInterval = null;
-
-        function updateProgress() {
-            if (progressInterval) clearInterval(progressInterval);
-            
-            progressInterval = setInterval(() => {
-                if (!isPlaying || isPaused || !player) return;
-                
-                const dur = trackDuration;
-                
-                if (dur > 0) {
-                    const current = (Date.now() - trackStartTime) / 1000;
-                    const percent = Math.min((current / dur) * 100, 100);
-                    progressFill.style.width = `${percent}%`;
-                    currentTimeEl.textContent = formatTime(Math.min(current, dur));
-                    
-                    // Auto next when track ends
-                    if (current >= dur) {
-                        playNext();
-                    }
-                }
-            }, 1000);
-        }
-
-        function initVisualizer() {
-            for (let i = 0; i < 64; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'visualizer-bar';
-                bar.style.height = '5px';
-                visualizer.appendChild(bar);
-            }
-        }
-
-        function updateVisualizer() {
-            const bars = visualizer.children;
-            function draw() {
-                if (!isPlaying) return;
-                
-                for (let i = 0; i < bars.length; i++) {
-                    const height = Math.random() * 80 + 10;
-                    bars[i].style.height = `${height}px`;
-                }
-                
-                requestAnimationFrame(draw);
-            }
-            draw();
-        }
-
-        function filterTracks(query) {
-            query = query.toLowerCase();
-            filteredTracks = tracks.filter(track => 
-                (track.sn && track.sn.toLowerCase().includes(query)) ||
-                (track.rg && track.rg.toLowerCase().includes(query)) ||
-                (track.mdt && track.mdt.toLowerCase().includes(query))
-            );
-            currentTrackIndex = -1;
-            renderPlaylist();
-        }
-
-        playBtn.addEventListener('click', togglePlay);
-        prevBtn.addEventListener('click', playPrev);
-        nextBtn.addEventListener('click', playNext);
-        stopBtn.addEventListener('click', stop);
-        repeatBtn.addEventListener('click', toggleRepeat);
-        shuffleBtn.addEventListener('click', toggleShuffle);
-
-        volumeSlider.addEventListener('input', (e) => {
-            if (player && player.gainNode) {
-                player.gainNode.gain.value = e.target.value / 100;
-            }
-        });
-
-        progressBar.addEventListener('click', (e) => {
-            // Seeking not supported in this player implementation
-        });
-
-        searchBox.addEventListener('input', (e) => {
-            filterTracks(e.target.value);
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            
-            switch(e.code) {
-                case 'Space':
-                    e.preventDefault();
-                    togglePlay();
-                    break;
-                case 'ArrowRight':
-                    playNext();
-                    break;
-                case 'ArrowLeft':
-                    playPrev();
-                    break;
-                case 'KeyR':
-                    toggleRepeat();
-                    break;
-                case 'KeyS':
-                    toggleShuffle();
-                    break;
-            }
-        });
-
-        // Wait for Module to load from libopenmpt.js
-        var checkModule = setInterval(function() {
-            if (typeof Module !== 'undefined' && typeof ChiptuneJsPlayer !== 'undefined') {
-                clearInterval(checkModule);
-                init();
-            }
-        }, 100);
-    </script>
+  <script type="module" src="./js/app.js"></script>
 </body>
 </html>

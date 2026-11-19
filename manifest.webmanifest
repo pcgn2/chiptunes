@@ -1,0 +1,13 @@
+{
+  "name": "KEYGEN MUSIC — Chiptune Player",
+  "short_name": "Chiptunes",
+  "description": "Stream thousands of MOD, XM, IT and S3M modules with a real-time spectrum visualizer.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050410",
+  "theme_color": "#050410",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
