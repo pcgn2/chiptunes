@@ -85,8 +85,15 @@ const engine = new ChiptuneEngine({
 /* ---------------- Playback ---------------- */
 
 async function playTrack(track, startAt = 0) {
-  if (!track || !engine.ready) {
-    if (!engine.ready) toast('Audio engine is not ready in this browser', true);
+  if (!track) return;
+  if (!engine.ready) {
+    const deadline = performance.now() + 4000;
+    while (!engine.ready && performance.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+  if (!engine.ready) {
+    toast('Audio engine is not ready in this browser', true);
     return;
   }
   state.current = track;
