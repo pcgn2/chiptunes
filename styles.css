@@ -398,9 +398,11 @@ input[type="range"]::-moz-range-thumb {
 .search-wrap input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); padding: 12px 0; font-size: .95rem; }
 .search-wrap input::placeholder { color: var(--faint); }
 .search-wrap #favoritesOnlyBtn {
-  width: 30px; height: 30px; flex: none; border-radius: 8px; transform: none;
+  position: relative; width: 30px; height: 30px; flex: none; border-radius: 8px; transform: none;
   border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--faint);
 }
+/* Expand the tap area to ~44px without inflating the visual control. */
+.search-wrap #favoritesOnlyBtn::after { content: ''; position: absolute; inset: -7px; }
 .search-wrap #favoritesOnlyBtn svg { width: 16px; height: 16px; filter: none; }
 .search-wrap #favoritesOnlyBtn:hover {
   color: var(--accent-2); border-color: rgba(var(--accent-2-rgb), .55);
@@ -461,7 +463,8 @@ kbd { font: 500 .68rem/1 var(--font-mono); color: var(--muted); border: 1px soli
 .row-game { color: var(--faint); font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .row-end { display: grid; place-items: center; gap: 4px; }
 .row-format { font: 600 .64rem/1 var(--font-mono); color: var(--faint); }
-.row-fav { background: none; border: 0; padding: 2px; color: var(--faint); line-height: 0; transition: color .15s, transform .15s; }
+.row-fav { position: relative; background: none; border: 0; padding: 2px; color: var(--faint); line-height: 0; transition: color .15s, transform .15s; }
+.row-fav::after { content: ''; position: absolute; inset: -13px; }
 .row-fav svg { width: 15px; height: 15px; }
 .row-fav:hover { color: var(--accent-2); transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(var(--accent-2-rgb), .6)); }
 .row-fav.on { color: var(--accent-2); filter: drop-shadow(0 0 9px rgba(var(--accent-2-rgb), .55)); }
@@ -513,6 +516,7 @@ mark { background: rgba(var(--accent-rgb), .26); color: var(--text); border-radi
 .minimal #shuffleBtn { width: 34px; height: 34px; opacity: .55; }
 .minimal #shuffleBtn.active { opacity: 1; }
 .minimal #shuffleBtn svg { width: 17px; height: 17px; }
+.minimal #shuffleBtn::after, .minimal .icon-btn.tiny::after { content: ''; position: absolute; inset: -5px; }
 .minimal .play-btn { width: 62px; height: 62px; }
 .minimal .play-btn::before { inset: -5px; }
 .minimal .play-btn svg { width: 26px; height: 26px; }
@@ -553,13 +557,28 @@ mark { background: rgba(var(--accent-rgb), .26); color: var(--text); border-radi
   .format-chip { display: none; }
   .icon-btn { width: 42px; height: 42px; }
   .play-btn { width: 62px; height: 62px; }
-  .controls { gap: 5px; }
+  .minimal .controls { gap: 8px; margin: 10px 0 6px; }
+  .minimal .search-wrap { min-height: 46px; }
+  .minimal .search-wrap #favoritesOnlyBtn { width: 34px; height: 34px; }
   .player-foot { flex-direction: column; align-items: stretch; }
   .volume input { width: 100%; flex: 1; }
   .tracker { justify-content: space-between; }
   .chip-row select { margin-left: 0; }
   .result-info { display: none; }
   .site-foot:not(.credits) { display: none; }
+  .site-foot.credits { font-size: .7rem; line-height: 1.55; }
+}
+/* Small phones (iPhone SE / 320px): keep the hero wordmark fully visible. */
+@media (max-width: 360px) {
+  .minimal .app-shell { padding: 12px 10px; }
+  .minimal .topbar { padding: 12px 12px; }
+  .minimal .brand { gap: 10px; }
+  .minimal .brand-emblem { width: 44px; height: 44px; }
+  .minimal .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+  .minimal .brand-mark svg { width: 21px; height: 21px; }
+  .minimal .brand-copy h1 { font-size: .92rem; letter-spacing: .04em; }
+  .minimal .card { padding: 13px; }
+  .minimal .controls { gap: 7px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
