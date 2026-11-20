@@ -1,5 +1,5 @@
 /* Offline shell cache — audio streams are never cached. Static assets are network-first. */
-const VERSION = 'kgm-v19';
+const VERSION = 'kgm-v22';
 const SHELL = [
   './',
   './index.html',
@@ -11,6 +11,7 @@ const SHELL = [
   './js/player.js',
   './js/storage.js',
   './js/visualizer.js',
+  './js/wake-lock.js',
   './js/audio-worklet.js',
   './js/decoder-worker.js',
   './js/libopenmpt.js',

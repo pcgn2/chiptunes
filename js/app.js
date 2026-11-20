@@ -1,6 +1,7 @@
 import { buildCatalog, filterCatalog, formatTime, normalize } from './catalog.js';
 import { ChiptuneEngine } from './player.js';
 import { Visualizer } from './visualizer.js';
+import { setWakeActive, getWakeState } from './wake-lock.js';
 import { readStore, writeStore } from './storage.js';
 
 const $ = (id) => document.getElementById(id);
@@ -72,6 +73,14 @@ function setBoot(message, progress) {
 function setStatus(status, label) {
   el.statusPill.dataset.state = status;
   el.statusPill.textContent = label || status;
+  const playing = status === 'playing' || status === 'buffering';
+  setPlayIcon(playing);
+  setWakeActive(playing);
+  if ('mediaSession' in navigator) {
+    try {
+      navigator.mediaSession.playbackState = playing ? 'playing' : status === 'paused' ? 'paused' : 'none';
+    } catch { /* playbackState is best-effort */ }
+  }
 }
 
 const engine = new ChiptuneEngine({
@@ -105,7 +114,6 @@ async function playTrack(track, startAt = 0) {
   updateTrackUI();
   updateSeekUI();
   setStatus('buffering', 'Buffering');
-  setPlayIcon(true);
   visualizer.setIdle(true);
   pushRecent(track.id);
   setupMediaSession();
@@ -196,7 +204,6 @@ function nextTrack(auto = false) {
         state.position = state.duration;
         state.isPlaying = false;
         setStatus('ready', 'Finished');
-        setPlayIcon(false);
         visualizer.setIdle(true);
         updateSeekUI();
         return;
@@ -232,12 +239,10 @@ function togglePlay() {
     engine.pause();
     state.isPlaying = false;
     setStatus('paused', 'Paused');
-    setPlayIcon(false);
     visualizer.setIdle(true);
   } else {
     state.isPlaying = true;
     setStatus(state.buffering ? 'buffering' : 'playing', state.buffering ? 'Buffering' : 'Playing');
-    setPlayIcon(true);
     visualizer.setIdle(false);
     engine.resume();
   }
@@ -250,7 +255,6 @@ function stopTrack() {
   state.position = 0;
   state.duration = 0;
   setStatus('ready', 'Stopped');
-  setPlayIcon(false);
   visualizer.setIdle(true);
   updateSeekUI();
   renderList();
@@ -265,8 +269,10 @@ function seekTo(seconds) {
 }
 
 function setPlayIcon(playing) {
-  el.playIcon.hidden = playing;
-  el.pauseIcon.hidden = !playing;
+  // These are SVG elements: the .hidden IDL property does not reflect to the
+  // hidden attribute there, so toggle the attribute CSS actually sees.
+  el.playIcon.toggleAttribute('hidden', playing);
+  el.pauseIcon.toggleAttribute('hidden', !playing);
   el.playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
 }
 
@@ -661,6 +667,6 @@ async function boot() {
 }
 
 /* Small debug hook, useful for inspecting playback state from the console. */
-window.__kgm = { engine, state, visualizer };
+window.__kgm = { engine, state, visualizer, wakeLock: getWakeState };
 
 boot();

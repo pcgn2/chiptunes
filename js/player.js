@@ -1,4 +1,17 @@
 /* Browser audio engine: AudioWorklet with a ScriptProcessor fallback, driven by a decoder worker. */
+
+/* iOS Safari defaults Web Audio to an "ambient" session, which obeys the
+   hardware ring/silent switch. Requesting "playback" treats this page as media
+   playback so the chiptunes keep sounding while the phone is muted.
+   Supported in Safari on iOS 16.4+; harmless where unsupported. */
+function selectPlaybackAudioSession() {
+  const session = navigator.audioSession;
+  if (!session) return;
+  try {
+    session.type = 'playback';
+  } catch { /* experimental API: some implementations may reject writes */ }
+}
+
 export class ChiptuneEngine {
   constructor(handlers = {}) {
     this.handlers = handlers;
@@ -21,6 +34,7 @@ export class ChiptuneEngine {
   }
 
   async init() {
+    selectPlaybackAudioSession();
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) throw new Error('This browser does not support the Web Audio API');
 
@@ -183,6 +197,8 @@ export class ChiptuneEngine {
   }
 
   async resume() {
+    // Set inside the user gesture so iOS applies it before audio starts.
+    selectPlaybackAudioSession();
     if (!this.ctx) return;
     // Safari reports an extra 'interrupted' state after leaving the tab.
     if (this.ctx.state !== 'running') await this.ctx.resume();
